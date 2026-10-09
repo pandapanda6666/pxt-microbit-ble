@@ -1,6 +1,5 @@
 /**
- * 專屬 Panda 無人機的自訂藍芽 LED 控制擴充套件
- * 支援透過藍芽 UART 控制 Micro:bit 的 5x5 LED 矩陣
+ * Panda BLE LED 控制
  */
 //% color="#0066cc" weight=100 icon="\uf294"
 namespace bleLED {
@@ -8,11 +7,9 @@ namespace bleLED {
     let expectedPassword = "";
     let isAuthenticated = true;
     
-    // Static TypeScript 不允許函式指標為 null，因此預設給予空函式
     let userOnConnected: () => void = () => {};
     let userOnDisconnected: () => void = () => {};
 
-    // 統一註冊底層連線事件
     bluetooth.onBluetoothConnected(function () {
         userOnConnected();
     });
@@ -25,42 +22,33 @@ namespace bleLED {
     });
 
     /**
-     * 設定藍芽通訊的應用層密碼。
-     * 設定後，傳送端必須先透過 UART 傳送 "PWD:你的密碼" 才能解鎖操作權限。
-     * 每次藍芽斷線皆會自動重新上鎖。
+     * 設定藍芽通訊密碼
+     * @param pwd 密碼字串
      */
     //% block="設定藍芽通訊密碼為 %pwd"
-    //% weight=95
-    //% blockId=ble_set_password
     export function setBluetoothPassword(pwd: string): void {
         expectedPassword = pwd;
         isAuthenticated = (pwd == "");
     }
 
     /**
-     * 啟動藍芽 UART 矩陣接收器。
-     * 開啟後，當收到長度為 25 的 0/1 字串時，會自動改變 5x5 LED 的亮滅狀態。
+     * 啟動接收器
      */
     //% block="啟動藍芽 UART 矩陣接收器"
-    //% weight=100
-    //% blockId=ble_start_receiver
     export function startUARTReceiver(): void {
         isReceiverActive = true;
         bluetooth.startUartService();
-        // 使用 "\n" 作為換行符號，取代可能不存在的 bluetooth.newLine()
         bluetooth.onUartDataReceived("\n", function () {
             let data = bluetooth.uartReadUntil("\n");
-            if (!isReceiverActive) return; // 若已關閉則忽略資料
+            if (!isReceiverActive) return;
 
-            // 檢查是否需要密碼認證
             if (!isAuthenticated) {
                 if (data == "PWD:" + expectedPassword) {
                     isAuthenticated = true;
                 }
-                return; // 尚未驗證成功前，阻擋後續所有操作
+                return;
             }
 
-            // 解析字串並顯示在 5x5 LED 上
             if (data.length == 25) {
                 for (let y = 0; y < 5; y++) {
                     for (let x = 0; x < 5; x++) {
@@ -78,31 +66,25 @@ namespace bleLED {
     }
 
     /**
-     * 關閉藍芽 UART 矩陣接收器。
+     * 關閉接收器
      */
     //% block="關閉藍芽 UART 矩陣接收器"
-    //% weight=90
-    //% blockId=ble_stop_receiver
     export function stopUARTReceiver(): void {
         isReceiverActive = false;
     }
 
     /**
-     * 當藍芽裝置連線成功時觸發此事件。
+     * 當藍芽連線時
      */
     //% block="當藍芽連線時"
-    //% weight=80
-    //% blockId=ble_on_connected
     export function onConnected(handler: () => void): void {
         userOnConnected = handler;
     }
 
     /**
-     * 當藍芽裝置斷線時觸發此事件。
+     * 當藍芽斷線時
      */
     //% block="當藍芽斷線時"
-    //% weight=70
-    //% blockId=ble_on_disconnected
     export function onDisconnected(handler: () => void): void {
         userOnDisconnected = handler;
     }

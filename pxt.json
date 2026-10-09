@@ -1,14 +1,15 @@
 {
-    "name": "pxt-ble-led",
+    "name": "Panda-BLE-LED",
     "version": "1.0.0",
-    "description": "Custom Bluetooth LED receiver extension for Micro:bit",
+    "description": "🚀 專屬 Panda 無人機的 Micro:bit 藍芽 LED 擴充！輕鬆無線操控 5x5 矩陣。",
     "dependencies": {
         "core": "*",
         "bluetooth": "*"
     },
     "files": [
         "main.ts",
-        "README.md"
+        "README.md",
+        "icon.svg"
     ],
     "testFiles": [
         "test.ts"
@@ -16,5 +17,6 @@
     "supportedTargets": [
         "microbit"
     ],
-    "preferredEditor": "tsprj"
+    "preferredEditor": "tsprj",
+    "icon": "icon.svg"
 }

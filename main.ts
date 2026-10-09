@@ -2,7 +2,7 @@
  * 專屬 Panda 無人機的自訂藍芽 LED 控制擴充套件
  * 支援透過藍芽 UART 控制 Micro:bit 的 5x5 LED 矩陣
  */
-//% color="#0066cc" weight=100 icon="\uf294" block="藍芽LED控制"
+//% color="#0066cc" weight=100 icon="\uf294"
 namespace bleLED {
     let isReceiverActive = false;
     let expectedPassword = "";

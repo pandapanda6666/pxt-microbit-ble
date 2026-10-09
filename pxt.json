@@ -1,0 +1,20 @@
+{
+    "name": "pxt-ble-led",
+    "version": "1.0.0",
+    "description": "Custom Bluetooth LED receiver extension for Micro:bit",
+    "dependencies": {
+        "core": "*",
+        "bluetooth": "*"
+    },
+    "files": [
+        "main.ts",
+        "README.md"
+    ],
+    "testFiles": [
+        "test.ts"
+    ],
+    "supportedTargets": [
+        "microbit"
+    ],
+    "preferredEditor": "tsprj"
+}

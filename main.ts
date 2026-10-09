@@ -7,20 +7,21 @@ namespace bleLED {
     let isReceiverActive = false;
     let expectedPassword = "";
     let isAuthenticated = true;
-    let userOnConnected: () => void = null;
-    let userOnDisconnected: () => void = null;
+    
+    // Static TypeScript 不允許函式指標為 null，因此預設給予空函式
+    let userOnConnected: () => void = () => {};
+    let userOnDisconnected: () => void = () => {};
 
-    // 統一註冊底層連線事件，確保安全上鎖機制必定執行
+    // 統一註冊底層連線事件
     bluetooth.onBluetoothConnected(function () {
-        if (userOnConnected) userOnConnected();
+        userOnConnected();
     });
 
     bluetooth.onBluetoothDisconnected(function () {
-        // 藍芽斷線時，若有設定密碼，則強制重新上鎖
         if (expectedPassword != "") {
             isAuthenticated = false;
         }
-        if (userOnDisconnected) userOnDisconnected();
+        userOnDisconnected();
     });
 
     /**
@@ -46,8 +47,9 @@ namespace bleLED {
     export function startUARTReceiver(): void {
         isReceiverActive = true;
         bluetooth.startUartService();
-        bluetooth.onUartDataReceived(bluetooth.newLine(), function () {
-            let data = bluetooth.uartReadUntil(bluetooth.newLine());
+        // 使用 "\n" 作為換行符號，取代可能不存在的 bluetooth.newLine()
+        bluetooth.onUartDataReceived("\n", function () {
+            let data = bluetooth.uartReadUntil("\n");
             if (!isReceiverActive) return; // 若已關閉則忽略資料
 
             // 檢查是否需要密碼認證

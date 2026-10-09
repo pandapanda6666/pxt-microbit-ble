@@ -5,11 +5,40 @@
 //% color="#0066cc" weight=100 icon="\uf294" block="藍芽LED控制"
 namespace bleLED {
     let isReceiverActive = false;
+    let expectedPassword = "";
+    let isAuthenticated = true;
+    let userOnConnected: () => void = null;
+    let userOnDisconnected: () => void = null;
+
+    // 統一註冊底層連線事件，確保安全上鎖機制必定執行
+    bluetooth.onBluetoothConnected(function () {
+        if (userOnConnected) userOnConnected();
+    });
+
+    bluetooth.onBluetoothDisconnected(function () {
+        // 藍芽斷線時，若有設定密碼，則強制重新上鎖
+        if (expectedPassword != "") {
+            isAuthenticated = false;
+        }
+        if (userOnDisconnected) userOnDisconnected();
+    });
+
+    /**
+     * 設定藍芽通訊的應用層密碼。
+     * 設定後，傳送端必須先透過 UART 傳送 "PWD:你的密碼" 才能解鎖操作權限。
+     * 每次藍芽斷線皆會自動重新上鎖。
+     */
+    //% block="設定藍芽通訊密碼為 %pwd"
+    //% weight=95
+    //% blockId=ble_set_password
+    export function setBluetoothPassword(pwd: string): void {
+        expectedPassword = pwd;
+        isAuthenticated = (pwd == "");
+    }
 
     /**
      * 啟動藍芽 UART 矩陣接收器。
      * 開啟後，當收到長度為 25 的 0/1 字串時，會自動改變 5x5 LED 的亮滅狀態。
-     * (字串格式：由左至右、由上至下排列)
      */
     //% block="啟動藍芽 UART 矩陣接收器"
     //% weight=100
@@ -20,6 +49,14 @@ namespace bleLED {
         bluetooth.onUartDataReceived(bluetooth.newLine(), function () {
             let data = bluetooth.uartReadUntil(bluetooth.newLine());
             if (!isReceiverActive) return; // 若已關閉則忽略資料
+
+            // 檢查是否需要密碼認證
+            if (!isAuthenticated) {
+                if (data == "PWD:" + expectedPassword) {
+                    isAuthenticated = true;
+                }
+                return; // 尚未驗證成功前，阻擋後續所有操作
+            }
 
             // 解析字串並顯示在 5x5 LED 上
             if (data.length == 25) {
@@ -33,7 +70,6 @@ namespace bleLED {
                     }
                 }
             } else {
-                // 如果格式不對，直接顯示文字
                 basic.showString(data);
             }
         });
@@ -41,7 +77,6 @@ namespace bleLED {
 
     /**
      * 關閉藍芽 UART 矩陣接收器。
-     * 關閉後，Micro:bit 將停止解析藍芽傳來的 LED 字串。
      */
     //% block="關閉藍芽 UART 矩陣接收器"
     //% weight=90
@@ -52,23 +87,21 @@ namespace bleLED {
 
     /**
      * 當藍芽裝置連線成功時觸發此事件。
-     * 可以在這裡加入連線成功時的動畫或燈號提示。
      */
     //% block="當藍芽連線時"
     //% weight=80
     //% blockId=ble_on_connected
     export function onConnected(handler: () => void): void {
-        bluetooth.onBluetoothConnected(handler);
+        userOnConnected = handler;
     }
 
     /**
      * 當藍芽裝置斷線時觸發此事件。
-     * 可以在這裡加入斷線時的動畫或燈號提示，方便除錯。
      */
     //% block="當藍芽斷線時"
     //% weight=70
     //% blockId=ble_on_disconnected
     export function onDisconnected(handler: () => void): void {
-        bluetooth.onBluetoothDisconnected(handler);
+        userOnDisconnected = handler;
     }
 }

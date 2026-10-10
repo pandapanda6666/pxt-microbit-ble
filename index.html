@@ -29,9 +29,10 @@
     <div class="grid" id="ledGrid"></div>
 
     <div class="hint">
-        <p>※ <b>Micro:bit 燒錄檢查：</b></p>
-        <p>1. 是否有在「當啟動時」放入 <b>啟動藍芽 UART 矩陣接收器</b> 積木？</p>
-        <p>2. 專案設定是否為 <b>No Pairing Required</b>？</p>
+        <p>※ <b>Micro:bit 燒錄提示：</b></p>
+        <p>1. 請在 MakeCode 匯入擴充：<code>https://github.com/pandapanda6666/pxt-microbit-ble</code></p>
+        <p>2. 確保積木有放 <b>啟動藍芽 UART 矩陣接收器</b> 於「當啟動時」。</p>
+        <p>3. 專案設定必須為 <b>No Pairing Required</b>。</p>
     </div>
 
     <script>
@@ -87,10 +88,8 @@
                     document.getElementById("status").innerText = "發送密碼認證中...";
                     let encoder = new TextEncoder();
                     let pwdData = encoder.encode("PWD:" + pwd + "\n");
-                    for (let i = 0; i < pwdData.length; i += 15) {
-                        await txChar.writeValueWithoutResponse(pwdData.slice(i, i + 15));
-                        await new Promise(r => setTimeout(r, 50));
-                    }
+                    // 密碼短於 20 byte，不需要拆包
+                    await txChar.writeValueWithoutResponse(pwdData);
                     await new Promise(r => setTimeout(r, 100));
                 }
                 
@@ -114,23 +113,24 @@
             if (!txChar || isBusy) return;
             isBusy = true;
             
-            let str = "";
+            // 壓縮資料格式: 將每列的燈號壓成一個數字 (0~31)
+            // 這樣字串長度大約只有 15 字元以內 (例如 "31,31,31,31,31\n")
+            // 完美避開藍芽底層 20 bytes 限制，完全不需要拆包，超穩定！
+            let nums = [];
             for (let r = 0; r < 5; r++) {
+                let val = 0;
                 for (let c = 0; c < 5; c++) {
-                    str += matrix[r][c] ? "1" : "0";
+                    if (matrix[r][c]) val |= (1 << c);
                 }
+                nums.push(val);
             }
-            str += "\n";
+            let str = nums.join(",") + "\n";
 
             let encoder = new TextEncoder();
             let data = encoder.encode(str);
 
             try {
-                for (let i = 0; i < data.length; i += 15) {
-                    let chunk = data.slice(i, i + 15);
-                    await txChar.writeValueWithoutResponse(chunk);
-                    await new Promise(r => setTimeout(r, 50));
-                }
+                await txChar.writeValueWithoutResponse(data);
             } catch (e) {
                 console.error("發送失敗:", e);
                 document.getElementById("status").innerText = "發送失敗: " + e.message;

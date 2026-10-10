@@ -45,6 +45,14 @@ namespace bleLED {
             if (!isAuthenticated) {
                 if (data == "PWD:" + expectedPassword) {
                     isAuthenticated = true;
+                    basic.showIcon(IconNames.Yes);
+                    basic.pause(500);
+                    basic.clearScreen();
+                } else {
+                    // 如果收到非預期的訊號或錯誤密碼，顯示打叉
+                    basic.showIcon(IconNames.No);
+                    basic.pause(500);
+                    basic.clearScreen();
                 }
                 return;
             }

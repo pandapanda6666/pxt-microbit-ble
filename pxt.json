@@ -1,6 +1,6 @@
 {
     "name": "Panda-BLE-LED",
-    "version": "1.0.9",
+    "version": "1.0.10",
     "description": "🚀 專屬 Panda 無人機的 Micro:bit 藍芽 LED 擴充！輕鬆無線操控 5x5 矩陣。",
     "dependencies": {
         "core": "*",

@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>Micro:bit 藍芽 UART LED 控制器 (網頁版)</title>
+    <title>Micro:bit 藍芽 UART LED 控制端</title>
     <style>
         body { font-family: '微軟正黑體', sans-serif; background: #222; color: #eee; text-align: center; padding-top: 50px; }
         .grid { display: inline-grid; grid-template-columns: repeat(5, 50px); gap: 5px; margin: 20px auto; }
@@ -10,22 +10,28 @@
         .cell.on { background: #ff3333; border-color: #ffaaaa; box-shadow: 0 0 10px red; }
         button { padding: 10px 20px; font-size: 16px; background: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
         button:hover { background: #45a049; }
+        button:disabled { background: #888; cursor: not-allowed; }
         .hint { color: #888; font-size: 14px; margin-top: 20px; line-height: 1.6; }
+        .controls { margin-bottom: 20px; display: flex; justify-content: center; align-items: center; gap: 10px; }
+        input[type="text"] { padding: 8px; font-size: 16px; border-radius: 4px; border: 1px solid #ccc; width: 120px; background: #333; color: white; }
     </style>
 </head>
 <body>
-    <h1>Micro:bit 藍芽 UART 傳送端</h1>
-    <p id="status" style="font-size: 1.2em; color: #aaa;">尚未連線 (請使用 Chrome 或 Edge 瀏覽器)</p>
-    密碼 (若有設定): <input type="text" id="pwdInput" style="font-size:16px; padding:5px; margin-right:10px; width: 100px;"><button id="connectBtn">連接 Micro:bit</button>
+    <h1>Micro:bit 藍芽 UART 無人機燈號</h1>
+    <p id="status" style="font-size: 1.2em; color: #aaa;">尚未連接 (請使用 Chrome 或 Edge 瀏覽器)</p>
+    
+    <div class="controls">
+        <label>密碼 (若無則免填):</label>
+        <input type="text" id="pwdInput" placeholder="輸入密碼">
+        <button id="connectBtn">連接 Micro:bit</button>
+    </div>
 
-    <br>
     <div class="grid" id="ledGrid"></div>
 
     <div class="hint">
-        <p>💡 <b>Micro:bit 準備事項：</b></p>
-        <p>1. 請在 MakeCode 匯入擴充：<code>https://github.com/pandapanda6666/pxt-microbit-ble</code></p>
-        <p>2. 拉出 <b>啟動藍芽 UART 矩陣接收器</b> 積木到「當啟動時」。</p>
-        <p>3. 專案設定將藍芽連線模式設為「<b>No Pairing Required</b>」。</p>
+        <p>※ <b>Micro:bit 燒錄檢查：</b></p>
+        <p>1. 是否有在「當啟動時」放入 <b>啟動藍芽 UART 矩陣接收器</b> 積木？</p>
+        <p>2. 專案設定是否為 <b>No Pairing Required</b>？</p>
     </div>
 
     <script>
@@ -44,18 +50,7 @@
                 div.onclick = () => {
                     matrix[r][c] = !matrix[r][c];
                     div.classList.toggle("on", matrix[r][c]);
-                    
-                // Send password
-                let pwd = document.getElementById("pwdInput").value;
-                let encoder = new TextEncoder();
-                let pwdData = encoder.encode("PWD:" + pwd + "\n");
-                for (let i = 0; i < pwdData.length; i += 15) {
-                    await txChar.writeValueWithoutResponse(pwdData.slice(i, i + 15));
-                    await new Promise(r => setTimeout(r, 50));
-                }
-                await new Promise(r => setTimeout(r, 100));
-                
-                sendMatrix();
+                    sendMatrix();
                 };
                 grid.appendChild(div);
             }
@@ -74,24 +69,37 @@
                 device.addEventListener('gattserverdisconnected', () => {
                     document.getElementById("status").innerText = "連線已斷開！";
                     document.getElementById("status").style.color = "red";
-                    document.getElementById("connectBtn").style.display = "inline-block";
+                    document.getElementById("connectBtn").disabled = false;
                     txChar = null;
                 });
 
                 document.getElementById("status").innerText = "連接中... (請耐心等待)";
+                document.getElementById("connectBtn").disabled = true;
+                
                 const server = await device.gatt.connect();
                 const service = await server.getPrimaryService(SERVICE_UUID);
                 txChar = await service.getCharacteristic(CHAR_UUID_RX);
                 
-                // 等待一下讓藍芽底層穩定，避免剛連上馬上發送導致 Operation failed
                 await new Promise(r => setTimeout(r, 500));
+                
+                let pwd = document.getElementById("pwdInput").value.trim();
+                if (pwd !== "") {
+                    document.getElementById("status").innerText = "發送密碼認證中...";
+                    let encoder = new TextEncoder();
+                    let pwdData = encoder.encode("PWD:" + pwd + "\n");
+                    for (let i = 0; i < pwdData.length; i += 15) {
+                        await txChar.writeValueWithoutResponse(pwdData.slice(i, i + 15));
+                        await new Promise(r => setTimeout(r, 50));
+                    }
+                    await new Promise(r => setTimeout(r, 100));
+                }
                 
                 document.getElementById("status").innerText = "連線成功！點擊下方格子發送訊號。";
                 document.getElementById("status").style.color = "#4CAF50";
-                document.getElementById("connectBtn").style.display = "none";
                 
                 sendMatrix();
             } catch (err) {
+                document.getElementById("connectBtn").disabled = false;
                 if (err.name === "NotFoundError") {
                     document.getElementById("status").innerText = "已取消連線 (未選擇裝置)";
                     document.getElementById("status").style.color = "#aaa";
@@ -118,11 +126,9 @@
             let data = encoder.encode(str);
 
             try {
-                // 強制拆包發送 (每包 15 bytes)，避免 20 bytes 的 MTU 限制
                 for (let i = 0; i < data.length; i += 15) {
                     let chunk = data.slice(i, i + 15);
                     await txChar.writeValueWithoutResponse(chunk);
-                    // 每次寫入後稍微等待，避免塞爆藍芽緩衝區導致 operation failed
                     await new Promise(r => setTimeout(r, 50));
                 }
             } catch (e) {

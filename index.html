@@ -56,7 +56,7 @@
                 document.getElementById("status").style.color = "#00aaff";
                 
                 const device = await navigator.bluetooth.requestDevice({
-                    filters: [{ namePrefix: "BBC micro:bit" }],
+                    acceptAllDevices: true,
                     optionalServices: [SERVICE_UUID]
                 });
                 

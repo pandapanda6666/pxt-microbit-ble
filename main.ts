@@ -27,7 +27,7 @@ namespace bleLED {
      * 若有設定密碼，控制端必須送出正確密碼才能控制燈號。
      * @param pwd 密碼字串，留空代表不需密碼
      */
-    //% block="設定藍芽通訊密碼為 %pwd"
+    //% blockId=bleled_set_pwd block="設定藍芽通訊密碼為 %pwd"
     //% weight=90
     export function setBluetoothPassword(pwd: string): void {
         expectedPassword = pwd;
@@ -38,7 +38,7 @@ namespace bleLED {
      * 啟動藍芽 UART 矩陣接收器。
      * 必須放置於「當啟動時」積木中，才能開始接收網頁端的燈號控制訊號。
      */
-    //% block="啟動藍芽 UART 矩陣接收器"
+    //% blockId=bleled_start_uart block="啟動藍芽 UART 矩陣接收器"
     //% weight=80
     export function startUARTReceiver(): void {
         isReceiverActive = true;
@@ -86,7 +86,7 @@ namespace bleLED {
      * 關閉藍芽 UART 矩陣接收器。
      * 暫停接收網頁端的控制訊號。
      */
-    //% block="關閉藍芽 UART 矩陣接收器"
+    //% blockId=bleled_stop_uart block="關閉藍芽 UART 矩陣接收器"
     //% weight=70
     export function stopUARTReceiver(): void {
         isReceiverActive = false;
@@ -95,7 +95,7 @@ namespace bleLED {
     /**
      * 當藍芽連線成功時觸發此事件。
      */
-    //% block="當藍芽連線時"
+    //% blockId=bleled_on_connected block="當藍芽連線時"
     //% weight=60
     export function onConnected(handler: () => void): void {
         userOnConnected = handler;
@@ -104,7 +104,7 @@ namespace bleLED {
     /**
      * 當藍芽斷線時觸發此事件。
      */
-    //% block="當藍芽斷線時"
+    //% blockId=bleled_on_disconnected block="當藍芽斷線時"
     //% weight=50
     export function onDisconnected(handler: () => void): void {
         userOnDisconnected = handler;

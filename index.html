@@ -106,13 +106,13 @@
                 // Micro:bit BLE UART 通常有 20 byte 限制，但由於剛好是 26 bytes (25 + \n)
                 // 現代的 Web Bluetooth API 會自動分包 (fragmentation)，
                 // 若舊版有問題可能需拆兩包，但現代瀏覽器大多能一次 writeValue 處理。
-                await txChar.writeValue(data);
+                await txChar.writeValueWithoutResponse(data);
             } catch (e) {
                 console.error("發送失敗:", e);
                 // 備用方案: 拆分發送 (如果發生 MTU 限制錯誤)
                 try {
-                    await txChar.writeValue(data.slice(0, 15));
-                    await txChar.writeValue(data.slice(15));
+                    await txChar.writeValueWithoutResponse(data.slice(0, 15));
+                    await txChar.writeValueWithoutResponse(data.slice(15));
                 } catch(e2) {
                     console.error("拆包發送也失敗:", e2);
                 }

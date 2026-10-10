@@ -16,7 +16,7 @@
 <body>
     <h1>Micro:bit 藍芽 UART 傳送端</h1>
     <p id="status" style="font-size: 1.2em; color: #aaa;">尚未連線 (請使用 Chrome 或 Edge 瀏覽器)</p>
-    <button id="connectBtn">連接 Micro:bit</button>
+    密碼 (若有設定): <input type="text" id="pwdInput" style="font-size:16px; padding:5px; margin-right:10px; width: 100px;"><button id="connectBtn">連接 Micro:bit</button>
 
     <br>
     <div class="grid" id="ledGrid"></div>
@@ -44,7 +44,18 @@
                 div.onclick = () => {
                     matrix[r][c] = !matrix[r][c];
                     div.classList.toggle("on", matrix[r][c]);
-                    sendMatrix();
+                    
+                // Send password
+                let pwd = document.getElementById("pwdInput").value;
+                let encoder = new TextEncoder();
+                let pwdData = encoder.encode("PWD:" + pwd + "\n");
+                for (let i = 0; i < pwdData.length; i += 15) {
+                    await txChar.writeValueWithoutResponse(pwdData.slice(i, i + 15));
+                    await new Promise(r => setTimeout(r, 50));
+                }
+                await new Promise(r => setTimeout(r, 100));
+                
+                sendMatrix();
                 };
                 grid.appendChild(div);
             }

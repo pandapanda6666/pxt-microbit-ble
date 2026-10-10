@@ -77,8 +77,13 @@
                 document.getElementById("connectBtn").style.display = "none";
                 sendMatrix();
             } catch (err) {
-                document.getElementById("status").innerText = "連線失敗: " + err;
-                document.getElementById("status").style.color = "red";
+                if (err.name === "NotFoundError") {
+                    document.getElementById("status").innerText = "已取消連線 (未選擇裝置)";
+                    document.getElementById("status").style.color = "#aaa";
+                } else {
+                    document.getElementById("status").innerText = "連線失敗: " + err;
+                    document.getElementById("status").style.color = "red";
+                }
             }
         };
 

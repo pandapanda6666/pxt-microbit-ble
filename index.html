@@ -56,7 +56,8 @@
                 document.getElementById("status").style.color = "#00aaff";
                 
                 const device = await navigator.bluetooth.requestDevice({
-                    filters: [{ services: [SERVICE_UUID] }]
+                    acceptAllDevices: true,
+                    optionalServices: [SERVICE_UUID]
                 });
                 
                 device.addEventListener('gattserverdisconnected', () => {

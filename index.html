@@ -29,11 +29,11 @@
     </div>
 
     <script>
-        // Nordic UART Service (NUS) UUIDs
         const SERVICE_UUID = "6e400001-b5a3-f393-e0a9-e50e24dcca9e";
-        const CHAR_UUID_RX = "6e400002-b5a3-f393-e0a9-e50e24dcca9e"; // 寫入資料到 Micro:bit 的特性
+        const CHAR_UUID_RX = "6e400002-b5a3-f393-e0a9-e50e24dcca9e"; 
 
         let txChar = null;
+        let isBusy = false;
         const matrix = Array.from({length: 5}, () => Array(5).fill(false));
 
         const grid = document.getElementById("ledGrid");
@@ -52,7 +52,7 @@
 
         document.getElementById("connectBtn").onclick = async () => {
             try {
-                document.getElementById("status").innerText = "請求藍芽裝置中... 請在彈出視窗選擇你的 Micro:bit";
+                document.getElementById("status").innerText = "請求藍芽裝置中... 請在彈出視窗選擇裝置";
                 document.getElementById("status").style.color = "#00aaff";
                 
                 const device = await navigator.bluetooth.requestDevice({
@@ -67,14 +67,18 @@
                     txChar = null;
                 });
 
-                document.getElementById("status").innerText = "連接中...";
+                document.getElementById("status").innerText = "連接中... (請耐心等待)";
                 const server = await device.gatt.connect();
                 const service = await server.getPrimaryService(SERVICE_UUID);
                 txChar = await service.getCharacteristic(CHAR_UUID_RX);
                 
-                document.getElementById("status").innerText = "連線成功！點擊下方格子發送 UART 訊號。";
+                // 等待一下讓藍芽底層穩定，避免剛連上馬上發送導致 Operation failed
+                await new Promise(r => setTimeout(r, 500));
+                
+                document.getElementById("status").innerText = "連線成功！點擊下方格子發送訊號。";
                 document.getElementById("status").style.color = "#4CAF50";
                 document.getElementById("connectBtn").style.display = "none";
+                
                 sendMatrix();
             } catch (err) {
                 if (err.name === "NotFoundError") {
@@ -88,35 +92,34 @@
         };
 
         async function sendMatrix() {
-            if (!txChar) return;
+            if (!txChar || isBusy) return;
+            isBusy = true;
             
-            // 轉換為長度為 25 的字串 (0與1)
             let str = "";
             for (let r = 0; r < 5; r++) {
                 for (let c = 0; c < 5; c++) {
                     str += matrix[r][c] ? "1" : "0";
                 }
             }
-            str += "\n"; // MakeCode 的 uartReadUntil(newLine) 需要換行符號
+            str += "\n";
 
             let encoder = new TextEncoder();
             let data = encoder.encode(str);
 
             try {
-                // Micro:bit BLE UART 通常有 20 byte 限制，但由於剛好是 26 bytes (25 + \n)
-                // 現代的 Web Bluetooth API 會自動分包 (fragmentation)，
-                // 若舊版有問題可能需拆兩包，但現代瀏覽器大多能一次 writeValue 處理。
-                await txChar.writeValueWithoutResponse(data);
+                // 強制拆包發送 (每包 15 bytes)，避免 20 bytes 的 MTU 限制
+                for (let i = 0; i < data.length; i += 15) {
+                    let chunk = data.slice(i, i + 15);
+                    await txChar.writeValueWithoutResponse(chunk);
+                    // 每次寫入後稍微等待，避免塞爆藍芽緩衝區導致 operation failed
+                    await new Promise(r => setTimeout(r, 50));
+                }
             } catch (e) {
                 console.error("發送失敗:", e);
-                // 備用方案: 拆分發送 (如果發生 MTU 限制錯誤)
-                try {
-                    await txChar.writeValueWithoutResponse(data.slice(0, 15));
-                    await txChar.writeValueWithoutResponse(data.slice(15));
-                } catch(e2) {
-                    console.error("拆包發送也失敗:", e2);
-                }
+                document.getElementById("status").innerText = "發送失敗: " + e.message;
+                document.getElementById("status").style.color = "red";
             }
+            isBusy = false;
         }
     </script>
 </body>

@@ -1,6 +1,6 @@
 {
     "name": "Panda-BLE-LED",
-    "version": "1.0.6",
+    "version": "1.0.7",
     "description": "🚀 專屬 Panda 無人機的 Micro:bit 藍芽 LED 擴充！輕鬆無線操控 5x5 矩陣。",
     "dependencies": {
         "core": "*",
@@ -16,6 +16,5 @@
     "supportedTargets": [
         "microbit"
     ],
-    "preferredEditor": "tsprj",
-    "icon": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+PHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiByeD0iMTYiIGZpbGw9IiMwMDY2Y2MiLz48cGF0aCBkPSJNMzIgMTRsMTAgMTAtMTAgMTBWMTR6bTAgMjBsMTAgMTAtMTAgMTBWMzR6TTIyIDI0bDEwIDEwbS0xMCAxMGwxMC0xMCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjZmZmIiBzdHJva2Utd2lkdGg9IjQiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjwvc3ZnPg=="
+    "preferredEditor": "tsprj"
 }

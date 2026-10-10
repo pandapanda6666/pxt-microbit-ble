@@ -25,7 +25,7 @@ namespace bleLED {
      * 設定藍芽通訊密碼
      * @param pwd 密碼字串
      */
-    //% block="設定藍芽通訊密碼為 %pwd"
+    //% block="🔑 設定藍芽通訊密碼為 %pwd"
     export function setBluetoothPassword(pwd: string): void {
         expectedPassword = pwd;
         isAuthenticated = (pwd == "");
@@ -34,7 +34,7 @@ namespace bleLED {
     /**
      * 啟動接收器
      */
-    //% block="啟動藍芽 UART 矩陣接收器"
+    //% block="▶️ 啟動藍芽 UART 矩陣接收器"
     export function startUARTReceiver(): void {
         isReceiverActive = true;
         bluetooth.startUartService();
@@ -68,7 +68,7 @@ namespace bleLED {
     /**
      * 關閉接收器
      */
-    //% block="關閉藍芽 UART 矩陣接收器"
+    //% block="⏹️ 關閉藍芽 UART 矩陣接收器"
     export function stopUARTReceiver(): void {
         isReceiverActive = false;
     }
@@ -76,7 +76,7 @@ namespace bleLED {
     /**
      * 當藍芽連線時
      */
-    //% block="當藍芽連線時"
+    //% block="🔗 當藍芽連線時"
     export function onConnected(handler: () => void): void {
         userOnConnected = handler;
     }
@@ -84,7 +84,7 @@ namespace bleLED {
     /**
      * 當藍芽斷線時
      */
-    //% block="當藍芽斷線時"
+    //% block="❌ 當藍芽斷線時"
     export function onDisconnected(handler: () => void): void {
         userOnDisconnected = handler;
     }

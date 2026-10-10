@@ -12,6 +12,10 @@ namespace bleLED {
     let userOnDisconnected: () => void = () => {};
 
     bluetooth.onBluetoothConnected(function () {
+        // 證明藍芽確實被連上了 (顯示笑臉)
+        basic.showIcon(IconNames.Happy);
+        basic.pause(500);
+        basic.clearScreen();
         userOnConnected();
     });
 
@@ -43,6 +47,12 @@ namespace bleLED {
     export function startUARTReceiver(): void {
         isReceiverActive = true;
         bluetooth.startUartService();
+        
+        // 證明積木有被成功執行 (顯示愛心)
+        basic.showIcon(IconNames.Heart);
+        basic.pause(500);
+        basic.clearScreen();
+
         bluetooth.onUartDataReceived("\n", function () {
             let data = bluetooth.uartReadUntil("\n");
             if (!isReceiverActive) return;
@@ -80,6 +90,32 @@ namespace bleLED {
                 }
             }
         });
+    }
+
+    /**
+     * 測試專用：手動傳入字串解析點燈 (格式例如 "31,0,31,0,31")
+     * 用來證明解析邏輯是正常的，不需藍芽即可測試
+     */
+    //% blockId=bleled_test_parse block="測試解析點燈訊號 %data"
+    //% weight=75
+    export function testParseSignal(data: string): void {
+        let parts = data.split(",");
+        if (parts.length == 5) {
+            for (let y = 0; y < 5; y++) {
+                let val = parseInt(parts[y]);
+                for (let x = 0; x < 5; x++) {
+                    if ((val & (1 << x)) != 0) {
+                        led.plot(x, y);
+                    } else {
+                        led.unplot(x, y);
+                    }
+                }
+            }
+        } else {
+            basic.showIcon(IconNames.Sad);
+            basic.pause(500);
+            basic.clearScreen();
+        }
     }
 
     /**

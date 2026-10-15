@@ -1,11 +1,12 @@
-# Panda BLE LED Extension
+# Panda BLE LED 擴充套件
 
-專為 Micro:bit 設計的自訂藍芽 LED 矩陣控制擴充包。
+專屬 Panda 的 Micro:bit 藍芽 5x5 LED 矩陣控制擴充包。
 
-## 功能說明
-這套擴充能讓你在背景監聽藍芽 UART 訊號，並快速將字串轉換成 5x5 矩陣顯示。
-* **啟動藍芽 UART 矩陣接收器**：開始接收並解析字串。
-* **關閉藍芽 UART 矩陣接收器**：隨時暫停接收，避免干擾原有程式。
-* **連線與斷線事件**：讓你輕鬆定義連線狀態的提示燈號。
+## 使用步驟
 
-當你的滑鼠游標停留在 MakeCode 內的積木上時，會自動顯示詳細的使用說明與格式提示。
+1. 在 MakeCode 專案中匯入擴充網址：
+   `https://github.com/pandapanda6666/pxt-microbit-ble`
+2. 請確保「(設定圖示)/專案設定/不須配對：任何人可透過藍芽進行連線」要開啟。
+3. 在「當啟動時」放入「啟動藍芽 UART 矩陣接收器」積木。
+4. 打開控制網頁連線控制：
+   `https://pandapanda6666.github.io/pxt-microbit-ble/`

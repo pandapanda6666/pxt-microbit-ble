@@ -46,8 +46,8 @@ namespace bleLED {
         isReceiverActive = true;
         bluetooth.startUartService();
 
-        bluetooth.onUartDataReceived(serial.delimiters(Delimiters.NewLine), function () {
-            let data = bluetooth.uartReadUntil(serial.delimiters(Delimiters.NewLine));
+        bluetooth.onUartDataReceived("\n", function () {
+            let data = bluetooth.uartReadUntil("\n");
             if (!isReceiverActive) return;
 
             // 清理結尾的 carriage return 或空白字元

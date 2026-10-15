@@ -1,6 +1,6 @@
 /**
  * Panda BLE LED 擴充包
- * 提供無人機或一般 Micro:bit 透過藍芽遠端控制 5x5 LED 矩陣的功能
+ * 提供 Micro:bit 透過藍芽遠端控制 5x5 LED 矩陣的功能
  */
 //% color="#0066cc" weight=100 icon="\uf294"
 namespace bleLED {
@@ -10,12 +10,10 @@ namespace bleLED {
     
     let userOnConnected: () => void = () => {};
     let userOnDisconnected: () => void = () => {};
+    let userOnAuthSuccess: () => void = () => {};
+    let userOnAuthFailed: () => void = () => {};
 
     bluetooth.onBluetoothConnected(function () {
-        // 證明藍芽確實被連上了 (顯示笑臉)
-        basic.showIcon(IconNames.Happy);
-        basic.pause(500);
-        basic.clearScreen();
         userOnConnected();
     });
 
@@ -47,36 +45,39 @@ namespace bleLED {
     export function startUARTReceiver(): void {
         isReceiverActive = true;
         bluetooth.startUartService();
-        
-        // 證明積木有被成功執行 (顯示愛心)
-        basic.showIcon(IconNames.Heart);
-        basic.pause(500);
-        basic.clearScreen();
 
-        bluetooth.onUartDataReceived("\n", function () {
-            let data = bluetooth.uartReadUntil("\n");
+        bluetooth.onUartDataReceived(serial.delimiters(Delimiters.NewLine), function () {
+            let data = bluetooth.uartReadUntil(serial.delimiters(Delimiters.NewLine));
             if (!isReceiverActive) return;
 
-            // 攔截並驗證密碼
-            if (data.indexOf("PWD:") == 0) {
-                if (data == "PWD:" + expectedPassword) {
+            // 清理結尾的 carriage return 或空白字元
+            let cleanData = "";
+            for (let i = 0; i < data.length; i++) {
+                let code = data.charCodeAt(i);
+                if (code != 13 && code != 10) {
+                    cleanData += data.charAt(i);
+                }
+            }
+
+            // 攔截並驗證密碼 (格式: PWD:密碼)
+            if (cleanData.indexOf("PWD:") == 0) {
+                let receivedPwd = cleanData.substr(4);
+                if (receivedPwd == expectedPassword) {
                     isAuthenticated = true;
-                    basic.showIcon(IconNames.Yes);
-                    basic.pause(500);
-                    basic.clearScreen();
+                    bluetooth.uartWriteString("AUTH:OK\n");
+                    userOnAuthSuccess();
                 } else {
-                    basic.showIcon(IconNames.No);
-                    basic.pause(500);
-                    basic.clearScreen();
+                    bluetooth.uartWriteString("AUTH:FAIL\n");
+                    userOnAuthFailed();
                 }
                 return;
             }
 
-            // 未驗證前忽略其他點燈訊號
+            // 未通過驗證前忽略所有點燈訊號
             if (!isAuthenticated) return;
 
             // 解析壓縮後的點燈訊號 (格式: "31,31,31,31,31")
-            let parts = data.split(",");
+            let parts = cleanData.split(",");
             if (parts.length == 5) {
                 for (let y = 0; y < 5; y++) {
                     let val = parseInt(parts[y]);
@@ -90,32 +91,6 @@ namespace bleLED {
                 }
             }
         });
-    }
-
-    /**
-     * 測試專用：手動傳入字串解析點燈 (格式例如 "31,0,31,0,31")
-     * 用來證明解析邏輯是正常的，不需藍芽即可測試
-     */
-    //% blockId=bleled_test_parse block="測試解析點燈訊號 %data"
-    //% weight=75
-    export function testParseSignal(data: string): void {
-        let parts = data.split(",");
-        if (parts.length == 5) {
-            for (let y = 0; y < 5; y++) {
-                let val = parseInt(parts[y]);
-                for (let x = 0; x < 5; x++) {
-                    if ((val & (1 << x)) != 0) {
-                        led.plot(x, y);
-                    } else {
-                        led.unplot(x, y);
-                    }
-                }
-            }
-        } else {
-            basic.showIcon(IconNames.Sad);
-            basic.pause(500);
-            basic.clearScreen();
-        }
     }
 
     /**
@@ -144,5 +119,23 @@ namespace bleLED {
     //% weight=50
     export function onDisconnected(handler: () => void): void {
         userOnDisconnected = handler;
+    }
+
+    /**
+     * 當密碼驗證成功時觸發此事件。
+     */
+    //% blockId=bleled_on_auth_success block="當密碼驗證成功時"
+    //% weight=40
+    export function onAuthSuccess(handler: () => void): void {
+        userOnAuthSuccess = handler;
+    }
+
+    /**
+     * 當密碼驗證失敗時觸發此事件。
+     */
+    //% blockId=bleled_on_auth_failed block="當密碼驗證失敗時"
+    //% weight=30
+    export function onAuthFailed(handler: () => void): void {
+        userOnAuthFailed = handler;
     }
 }

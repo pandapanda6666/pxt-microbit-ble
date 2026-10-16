@@ -2,7 +2,7 @@
  * Panda BLE LED 擴充包
  * 提供 Micro:bit 透過藍芽遠端控制 5x5 LED 矩陣的功能
  */
-//% color="#0066cc" weight=100 icon="\uf294"
+//% color="#007acc" weight=100 icon="\uf294" block="藍芽 LED"
 namespace bleLED {
     let isReceiverActive = false;
     let expectedPassword = "";

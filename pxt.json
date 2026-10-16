@@ -1,6 +1,6 @@
 {
-    "name": "Panda-BLE-LED",
-    "version": "1.0.16",
+    "name": "pxt-microbit-ble",
+    "version": "1.0.17",
     "description": "Panda Microbit BLE LED matrix controller extension",
     "dependencies": {
         "core": "*",
@@ -9,8 +9,7 @@
     },
     "files": [
         "main.ts",
-        "README.md",
-        "icon.png"
+        "README.md"
     ],
     "testFiles": [
         "test.ts"
@@ -18,6 +17,6 @@
     "supportedTargets": [
         "microbit"
     ],
-    "preferredEditor": "tsprj",
-    "icon": "icon.png"
+    "preferredEditor": "blocksprj",
+    "public": true
 }

@@ -1,7 +1,7 @@
 {
     "name": "Panda-BLE-LED",
-    "version": "1.0.15",
-    "description": "專屬 Panda 的 Micro:bit 藍芽 LED 擴充，無線操控 5x5 矩陣。",
+    "version": "1.0.16",
+    "description": "Panda Microbit BLE LED matrix controller extension",
     "dependencies": {
         "core": "*",
         "bluetooth": "*",
